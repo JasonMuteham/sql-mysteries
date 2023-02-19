@@ -24,10 +24,6 @@ A crime has taken place and the detective needs your help. The detective gave yo
 ## My Solution ##
 */
 
-SELECT name 
-  FROM sqlite_master
- WHERE type = 'table'
-
 /*markdown
 **Get The Crime Report**
 */

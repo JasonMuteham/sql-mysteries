@@ -5,7 +5,7 @@ My solution to the crime and a demonstration of how to showcase SQL projects by 
 
 https://jasonmuteham.github.io/sql-mysteries/
 
-Edit murder.sql to display your own SQL.
+Edit mySQL.sql to display your own SQL.
 
 See https://mystery.knightlab.com/ to test your own crime solving abilities!
 

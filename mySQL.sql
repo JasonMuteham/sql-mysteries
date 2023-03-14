@@ -1,5 +1,5 @@
 /*markdown
-## SQL Murder Mystery ##
+## SQL Murder Mystery Solution ##
 */
 
 /*markdown
@@ -28,7 +28,7 @@ A crime has taken place and the detective needs your help. The detective gave yo
 **Get The Crime Report**
 */
 
-SELECT * 
+SELECT date Date, type Crime, description Details 
   FROM crime_scene_report
  WHERE date = '20180115' 
    AND type = 'murder' 
@@ -38,13 +38,14 @@ SELECT *
 **Find The Witnesses**
 */
 
-SELECT * 
+SELECT name Name, id 'Person ID', address_number 'House No', address_street_name 'Street Name' 
   FROM person
  WHERE address_street_name LIKE '%Northwestern%'
- ORDER BY address_number DESC
- LIMIT 1;
-
-SELECT * 
+   AND (SELECT MAX(address_number) 
+          FROM person 
+         WHERE address_street_name LIKE '%Northwestern%') = address_number
+ UNION
+SELECT name Name, id, address_number 'House No', address_street_name 'Street Name'
   FROM person
  WHERE address_street_name LIKE '%Franklin%' 
    AND name LIKE '%Annabel%'
@@ -53,91 +54,103 @@ SELECT *
 **Get The Witness Statements**
 */
 
-SELECT *
-  FROM interview
- WHERE person_id IN (14887, 16371);
+SELECT p.name AS 'Name', i.transcript AS Statement
+  FROM interview AS i
+  JOIN person AS p
+    ON i.person_id = p.id
+ WHERE i.person_id IN (SELECT id 
+                         FROM person
+                        WHERE address_street_name LIKE '%Northwestern%'
+                          AND (SELECT MAX(address_number) 
+                                 FROM person 
+                                WHERE address_street_name LIKE '%Northwestern%') = address_number
+                        UNION
+                       SELECT id
+                        FROM person
+                       WHERE address_street_name LIKE '%Franklin%' 
+                         AND name LIKE '%Annabel%')
 
 /*markdown
-**Track Down The Car**
+**Track Down The Car and Owner**
 */
 
-SELECT *
-  FROM drivers_license
- WHERE plate_number LIKE '%H42W%';
-
-/*markdown
-**Who Owns The Car**
-*/
-
-SELECT *
-  FROM person
- WHERE license_id IN (183779,423327,664760);
+SELECT p.name Name, d.plate_number 'Plate Number', d.car_make Make, d.car_model Model 
+  FROM drivers_license AS d
+  JOIN person AS p
+    ON d.id = p.license_id
+ WHERE plate_number LIKE '%H42W%'
+   AND d.gender = 'male';
 
 /*markdown
 **Investigate The Gym**
 */
 
-SELECT *
-  FROM get_fit_now_member
- WHERE id LIKE '48Z%';
-
-SELECT *
+SELECT name Name, membership_id 'Gym ID', check_in_date Date, check_in_time 'Time in', check_out_time 'Time out'
   FROM get_fit_now_check_in
+  JOIN get_fit_now_member
+    ON membership_id = id
  WHERE check_in_date = '20180109' 
    AND membership_id LIKE '48Z%';
 
-SELECT *
-  FROM person
- WHERE id IN (67318, 28819);
+/*markdown
+**Compare Suspect Drivers with Gym Membership**
+*/
+
+SELECT person_id AS 'Person ID', name AS 'The Murder Is' 
+  FROM get_fit_now_check_in
+  JOIN get_fit_now_member
+    ON membership_id = id
+ WHERE check_in_date = '20180109' 
+   AND membership_id LIKE '48Z%'
+   AND name IN (SELECT p.name 
+                  FROM drivers_license AS d
+                  JOIN person AS p
+                    ON d.id = p.license_id
+                 WHERE plate_number LIKE '%H42W%'
+                   AND d.gender = 'male');
 
 /*markdown
 **Did We Find The Killer?**
 */
 
 INSERT INTO solution VALUES (1, 'Jeremy Bowers');
-SELECT value FROM solution;
+SELECT value as 'Solved?'
+  FROM solution;
 
 /*markdown
 **Interview The Suspect**
 */
 
-SELECT *
+SELECT name Name, transcript 'Suspect Statement'
   FROM interview
+  JOIN person
+    ON person_id = id
  WHERE person_id = 67318;
 
 /*markdown
 **Follow New Lead**
 */
 
-SELECT *
-  FROM drivers_license
+SELECT name 'The Master Mind Behind The Crime Is'
+  FROM drivers_license d
+  JOIN person AS p
+    ON d.id = p.license_id
+  JOIN income i
+    ON p.ssn = i.ssn
  WHERE gender = 'female' 
    AND car_make = 'Tesla' 
    AND car_model = 'Model S' 
-   AND hair_color = 'red';
+   AND hair_color = 'red'
+   AND p.id IN (SELECT person_id
+                  FROM facebook_event_checkin
+                 WHERE event_name LIKE '%SQL Symphony Concert%' 
+                   AND date LIKE '201712__'
+                 GROUP BY person_id
+                HAVING COUNT(event_id) = 3)
 
 /*markdown
-**Check Attendance of Symphony**
-*/
-
-SELECT person_id, event_name, COUNT(event_id) as 'Attended'
-  FROM facebook_event_checkin
- WHERE event_name LIKE '%SQL Symphony Concert%' 
-   AND date LIKE '201712__'
- GROUP BY person_id
-HAVING Attended = 3;
-
-/*markdown
-**Match Licence Number to Person**
-*/
-
-SELECT *
-  FROM person
- WHERE license_id IN (202298,24556);
-
-/*markdown
-**Did We Find The Brains?**
+**Did We Find The Brains Behind The Crime?**
 */
 
 INSERT INTO solution VALUES (1, 'Miranda Priestly');
-SELECT value FROM solution;
+SELECT value 'Solved?' FROM solution;

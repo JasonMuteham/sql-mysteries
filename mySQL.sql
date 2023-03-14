@@ -1,4 +1,8 @@
 /*markdown
+https://github.com/JasonMuteham/sql-mysteries
+*/
+
+/*markdown
 ## SQL Murder Mystery Solution ##
 */
 
